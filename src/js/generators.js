@@ -13,7 +13,7 @@ export function* characterGenerator(allowedTypes, maxLevel) {
   }
 }
 
-export function generateTeam(allowedTypes, maxLevel, characterCount) {
+export function generateTeam(allowedTypes, maxLevel, characterCount) { //передаем тип персонажей (из Team), уровень и кол-во
   const character = characterGenerator(allowedTypes, maxLevel);
   const team = [];
 
