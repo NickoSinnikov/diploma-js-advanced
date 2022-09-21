@@ -8,7 +8,9 @@ import Vampire from './characters/Vampire';
 
 export default class Team {
 	static getStartUserTeam(){
-		return [new Bowman(1), new Swordsman(1)]
+	const team = [new Bowman(1), new Swordsman(1)]
+	
+		return team;
 	}
 
 	static getUserTeam(){
