@@ -3,11 +3,11 @@ import themes from "./themes";
 import PositionedCharacter from "./PositionedCharacter";
 import Team from "./Team";
 import { generateTeam } from "./generators";
-import {getInfo} from "./Function"
+import { getInfo } from "./Function"
 //import addPositionCharacted from "./Function";
 
- let userTeamPositions=[];
- let enemyTeamPositions = [];
+let userTeamPositions = [];
+let enemyTeamPositions = [];
 export default class GameController {
     constructor(gamePlay, stateService) {
         this.gamePlay = gamePlay;
@@ -19,13 +19,16 @@ export default class GameController {
     }
 
 
-    events(){
+    events() {
         this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+        this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+        this.gamePlay.addCellEnterListener(this.onCellClick.bind(this));
     }
 
 
     init() {
         // TODO: add event listeners to gamePlay events
+        this.events();
         this.gamePlay.drawUi(themes[1]); //themes[gameState.level];
         this.userTeam = Team.getStartUserTeam();
         this.level = 1;
@@ -33,28 +36,28 @@ export default class GameController {
         console.log(this.userTeam, this.enemyTeam)
         this.addPositionCharacted(this.userTeam, this.enemyTeam);
         console.log(userTeamPositions, enemyTeamPositions)
-        this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions ])
-        
+        this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions])
+
         // TODO: load saved stated from stateService
     }
 
     addPositionCharacted(userTeam, enemyTeam) {
-        
+
         for (let i = 0; i < userTeam.length; i += 1) {
-        let userStartPosition = this.randomUserPosition();
+            let userStartPosition = this.randomUserPosition();
             userTeamPositions.push(new PositionedCharacter(userTeam[i], userStartPosition));
         }
         for (let i = 0; i < enemyTeam.length; i += 1) {
             let enemyStartPosition = this.randomEnemyPosition();
-          enemyTeamPositions.push(new PositionedCharacter(enemyTeam[i], enemyStartPosition));
+            enemyTeamPositions.push(new PositionedCharacter(enemyTeam[i], enemyStartPosition));
         }
     }
 
-    randomUserPosition(){
+    randomUserPosition() {
         return Math.floor(Math.random() * 8) * 8 + ((Math.floor(Math.random() * 2)))
     }
-    randomEnemyPosition(){
-        return Math.floor(Math.random() * 8) * 8 + ((Math.floor(Math.random() * 2))+6)
+    randomEnemyPosition() {
+        return Math.floor(Math.random() * 8) * 8 + ((Math.floor(Math.random() * 2)) + 6)
     }
 
 
@@ -66,15 +69,16 @@ export default class GameController {
     onCellEnter(index) {
         // TODO: react to mouse enter
         this.index = index;
-        for (const item of [...userTeamPositions, ...enemyTeamPositions]) {
+        for (const item of[...userTeamPositions, ...enemyTeamPositions]) {
             if (item.position === index) {
-              this.gamePlay.showCellTooltip(getInfo(item.character), index);
+                this.gamePlay.showCellTooltip(getInfo(item.character), index);
             }
-          }
-          console.log('Курсор здесь')
+        }
+        console.log('Курсор здесь')
     }
 
     onCellLeave(index) {
         // TODO: react to mouse leave
+        this.gamePlay.hideCellTooltip(index)
     }
 }
