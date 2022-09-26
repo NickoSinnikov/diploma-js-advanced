@@ -1,12 +1,11 @@
-import PositionedCharacter from "./PositionedCharacter";
-import { userTeamPositions } from "./GameController";
-import { enemyTeamPositions } from "./GameController";
+const icons = {
+  level: '\u{1F396}',
+  attack: '\u{2694}',
+  defence: '\u{1F6E1}',
+  health: '\u{2764}',
+}
 
-export default function addPositionCharacted(userTeam, enemyTeam) {
-    for (let i = 0; i < userTeam.length; i += 1) {
-      userTeamPositions.push(new PositionedCharacter(userTeam[i], 0));
-    }
-    for (let i = 0; i < enemyTeam.length; i += 1) {
-      enemyTeamPositions.push(new PositionedCharacter(enemyTeam[i], 0));
-    }
-  }
+export function getInfo(character) {
+  const characterInfo = `${icons.level}${character.level}${icons.attack}${character.attack}${icons.defence}${character.defence}${icons.health}${character.health}`;
+  return characterInfo;
+}

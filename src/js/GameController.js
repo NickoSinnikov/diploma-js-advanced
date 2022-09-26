@@ -3,6 +3,7 @@ import themes from "./themes";
 import PositionedCharacter from "./PositionedCharacter";
 import Team from "./Team";
 import { generateTeam } from "./generators";
+import {getInfo} from "./Function"
 //import addPositionCharacted from "./Function";
 
  let userTeamPositions=[];
@@ -14,7 +15,14 @@ export default class GameController {
         this.userTeam = [];
         this.enemyTeam = [];
         this.level = null;
+        this.index = 0;
     }
+
+
+    events(){
+        this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+    }
+
 
     init() {
         // TODO: add event listeners to gamePlay events
@@ -52,10 +60,18 @@ export default class GameController {
 
     onCellClick(index) {
         // TODO: react to click
+
     }
 
     onCellEnter(index) {
         // TODO: react to mouse enter
+        this.index = index;
+        for (const item of [...userTeamPositions, ...enemyTeamPositions]) {
+            if (item.position === index) {
+              this.gamePlay.showCellTooltip(getInfo(item.character), index);
+            }
+          }
+          console.log('Курсор здесь')
     }
 
     onCellLeave(index) {
