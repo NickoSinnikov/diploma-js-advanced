@@ -18,7 +18,7 @@ export default class GameController {
         this.enemyTeam = [];
         this.level = null;
         this.index = 0;
-        this.moove = 'user';
+        this.move = 'user';
         this.selected = false;
         this.activeCharacter = {};
     }
@@ -66,18 +66,34 @@ export default class GameController {
     }
 
 
-    onCellClick(index) {
+    async onCellClick(index) {
         // TODO: react to click
         this.index = index;
-        if (this.getIndex([...userTeamPositions])!== -1){
+        if (this.gamePlay.boardEl.style.cursor === 'not-allowed') {
+            GamePlay.showError("Неверное действие!");
+        } else if (
+            /*this.move === 'user' &&*/
+            this.getIndex([...userTeamPositions]) !== -1) {
             this.gamePlay.deselectCell(currentSelected);
             this.gamePlay.selectCell(index);
             currentSelected = index;
             this.selected = true;
-            this.activeCharacter = [...userTeamPositions].find((item)=>item.position===index);
+            this.activeCharacter = [...userTeamPositions].find((item) => item.position === index);
             console.log(this.activeCharacter)
-        } else {
-            GamePlay.showError("Неверное действие!");
+        } else if (this.selected && this.gamePlay.boardEl.style.cursor === 'pointer') {
+            this.activeCharacter.position = index;
+            this.gamePlay.deselectCell(index);
+            this.gamePlay.deselectCell(currentSelected);
+            this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
+            this.move = "enemy";
+            this.selected = false;
+        } else if (this.selected && this.gamePlay.boardEl.style.cursor === 'crosshair') {
+            const attackedEnemy = [...enemyTeamPositions].find(item => item.position === index);
+            this.gamePlay.deselectCell(index);
+            this.gamePlay.deselectCell(currentSelected);
+            this.gamePlay.setCursor(cursors.auto);
+            this.selected = false;
+            await this.userAttak(this.activeCharacter.character, attackedEnemy)
         }
 
     }
@@ -85,36 +101,55 @@ export default class GameController {
     onCellEnter(index) {
         // TODO: react to mouse enter
         this.index = index;
-       
-        for (const item of [...userTeamPositions, ...enemyTeamPositions]) {
+
+        for (const item of[...userTeamPositions, ...enemyTeamPositions]) {
             if (item.position === index) {
                 this.gamePlay.showCellTooltip(getInfo(item.character), index);
             }
-        } 
+        }
 
-        if (this.selected){
-            
-            
+        if (this.selected) {
+
+
             const rightPositions = getRightPositions(this.activeCharacter.position, this.activeCharacter.character.distance);
             const rightAttack = getRightPositions(this.activeCharacter.position, this.activeCharacter.character.distanceAttack);
 
 
-            if (this.getIndex([...userTeamPositions])!== -1){
+            if (this.getIndex([...userTeamPositions]) !== -1) {
                 this.gamePlay.setCursor(cursors.pointer);
-            } else if (rightPositions.includes(index) && this.getIndex([...userTeamPositions, ...enemyTeamPositions]) === -1){
+            } else if (rightPositions.includes(index) && this.getIndex([...userTeamPositions, ...enemyTeamPositions]) === -1) {
                 this.gamePlay.selectCell(index, "green");
                 this.gamePlay.setCursor(cursors.pointer);
-            } else if(rightAttack.includes(index) && this.getIndex([...enemyTeamPositions]) !== -1){
+            } else if (rightAttack.includes(index) && this.getIndex([...enemyTeamPositions]) !== -1) {
                 this.gamePlay.selectCell(index, "red");
                 this.gamePlay.setCursor(cursors.crosshair);
-            }
-            else {
+            } else {
                 this.gamePlay.setCursor(cursors.notallowed);
             }
         }
-        
+
     }
 
+    async userAttak(attacker, attackedEnemy) {
+        const targetEnemy = attackedEnemy.character;
+        let damage = Math.max(attacker.attack - targetEnemy.defence, attacker.attack * 0.1);
+        damage = Math.floor(damage);
+
+        await this.gamePlay.showDamage(attackedEnemy.position);
+        targetEnemy.health -= damage;
+        this.move = "enemy";
+        if (targetEnemy.health <= 0) {
+            enemyTeamPositions = enemyTeamPositions.filter(item => item.position !== attackedEnemy.position);
+
+        }
+        this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
+    }
+
+
+    enemyMove() {
+
+
+    }
     onCellLeave(index) {
         // TODO: react to mouse leave
         this.gamePlay.hideCellTooltip(index)
@@ -123,9 +158,7 @@ export default class GameController {
     }
 
 
-    getIndex(arr){
-        return arr.findIndex((item) => item.position===this.index)
+    getIndex(arr) {
+        return arr.findIndex((item) => item.position === this.index)
     }
 }
-
-
