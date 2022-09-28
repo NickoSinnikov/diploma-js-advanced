@@ -3,11 +3,13 @@ import themes from "./themes";
 import PositionedCharacter from "./PositionedCharacter";
 import Team from "./Team";
 import { generateTeam } from "./generators";
-import { getInfo } from "./Function"
+import { getInfo, getRightPositions } from "./Function"
+import cursors from './cursors'
 //import addPositionCharacted from "./Function";
 
 let userTeamPositions = [];
 let enemyTeamPositions = [];
+let currentSelected = 0;
 export default class GameController {
     constructor(gamePlay, stateService) {
         this.gamePlay = gamePlay;
@@ -16,13 +18,16 @@ export default class GameController {
         this.enemyTeam = [];
         this.level = null;
         this.index = 0;
+        this.moove = 'user';
+        this.selected = false;
+        this.activeCharacter = {};
     }
 
 
     events() {
         this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
         this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
-        this.gamePlay.addCellEnterListener(this.onCellClick.bind(this));
+        this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
     }
 
 
@@ -63,22 +68,64 @@ export default class GameController {
 
     onCellClick(index) {
         // TODO: react to click
+        this.index = index;
+        if (this.getIndex([...userTeamPositions])!== -1){
+            this.gamePlay.deselectCell(currentSelected);
+            this.gamePlay.selectCell(index);
+            currentSelected = index;
+            this.selected = true;
+            this.activeCharacter = [...userTeamPositions].find((item)=>item.position===index);
+            console.log(this.activeCharacter)
+        } else {
+            GamePlay.showError("Неверное действие!");
+        }
 
     }
 
     onCellEnter(index) {
         // TODO: react to mouse enter
         this.index = index;
-        for (const item of[...userTeamPositions, ...enemyTeamPositions]) {
+       
+        for (const item of [...userTeamPositions, ...enemyTeamPositions]) {
             if (item.position === index) {
                 this.gamePlay.showCellTooltip(getInfo(item.character), index);
             }
+        } 
+
+        if (this.selected){
+            
+            
+            const rightPositions = getRightPositions(this.activeCharacter.position, this.activeCharacter.character.distance);
+            const rightAttack = getRightPositions(this.activeCharacter.position, this.activeCharacter.character.distanceAttack);
+
+
+            if (this.getIndex([...userTeamPositions])!== -1){
+                this.gamePlay.setCursor(cursors.pointer);
+            } else if (rightPositions.includes(index) && this.getIndex([...userTeamPositions, ...enemyTeamPositions]) === -1){
+                this.gamePlay.selectCell(index, "green");
+                this.gamePlay.setCursor(cursors.pointer);
+            } else if(rightAttack.includes(index) && this.getIndex([...enemyTeamPositions]) !== -1){
+                this.gamePlay.selectCell(index, "red");
+                this.gamePlay.setCursor(cursors.crosshair);
+            }
+            else {
+                this.gamePlay.setCursor(cursors.notallowed);
+            }
         }
-        console.log('Курсор здесь')
+        
     }
 
     onCellLeave(index) {
         // TODO: react to mouse leave
         this.gamePlay.hideCellTooltip(index)
+        this.gamePlay.deselectCell(index);
+        this.gamePlay.setCursor(cursors.auto)
+    }
+
+
+    getIndex(arr){
+        return arr.findIndex((item) => item.position===this.index)
     }
 }
+
+

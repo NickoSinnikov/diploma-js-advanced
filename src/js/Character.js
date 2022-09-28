@@ -9,6 +9,5 @@ export default class Character {
     if (new.target.name === 'Character') {
       throw new Error('not allowed to  create object by new Character');
     }
-
   }
 }
