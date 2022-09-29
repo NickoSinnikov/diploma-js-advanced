@@ -10,6 +10,9 @@ import cursors from './cursors'
 let userTeamPositions = [];
 let enemyTeamPositions = [];
 let currentSelected = 0;
+
+
+
 export default class GameController {
     constructor(gamePlay, stateService) {
         this.gamePlay = gamePlay;
@@ -93,7 +96,7 @@ export default class GameController {
             this.gamePlay.deselectCell(currentSelected);
             this.gamePlay.setCursor(cursors.auto);
             this.selected = false;
-            await this.userAttak(this.activeCharacter.character, attackedEnemy)
+            await this.userAttack(this.activeCharacter.character, attackedEnemy)
         }
 
     }
@@ -130,7 +133,7 @@ export default class GameController {
 
     }
 
-    async userAttak(attacker, attackedEnemy) {
+    async userAttack(attacker, attackedEnemy) {
         const targetEnemy = attackedEnemy.character;
         let damage = Math.max(attacker.attack - targetEnemy.defence, attacker.attack * 0.1);
         damage = Math.floor(damage);
@@ -139,17 +142,151 @@ export default class GameController {
         targetEnemy.health -= damage;
         this.move = "enemy";
         if (targetEnemy.health <= 0) {
-            enemyTeamPositions = enemyTeamPositions.filter(item => item.position !== attackedEnemy.position);
-
-        }
+            enemyTeamPositions = enemyTeamPositions.filter((item) => item.position !== attackedEnemy.position);
+            if (enemyTeamPositions.length === 0){
+                for (const item of userTeamPositions){
+                    this.point += item.character.health;
+                }
+               // this.levelUp();
+                this.level += 1;
+                //this.nextLevel();
+            }
+        };
         this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
     }
 
 
     enemyMove() {
+        if (this.move = "enemy"){
+            for (let enemyPers of [...enemyTeamPositions]){
+                const rightAttack = getRightPositions(enemyPers.position, this.activeCharacter.character.distanceAttack);
+                const target = this.enemyAttack(rightAttack);
+                if (target !== null){
+                    this.enemyTeamAttack(enemyPers.character, target);
+                    return;
+                }
+            }
+            const randomIndex = Math.floor(Math.random() * [...enemyTeamPositions].length);
+            const randomEnemy = [...enemyTeamPositions][randomIndex];
 
 
+            const itemEnemyDistance = randomEnemy.character.distance;
+            let tempPRow;
+            let tempPCOlumn;
+            let stepRow;
+            let stepColumn;
+            let Steps;
+            const itemEnemyRow = this.positionRow(randomEnemy.position);
+            const itemEnemyColumn = this.positionColumn(randomEnemy.position);
+            let nearUser = {};
+        
+            for (const itemUser of [...userTeamPositions]) {
+              const itemUserRow = this.positionRow(itemUser.position);
+              const itemUserColumn = this.positionColumn(itemUser.position);
+              stepRow = itemEnemyRow - itemUserRow;
+              stepColumn = itemEnemyColumn - itemUserColumn;
+              Steps = Math.abs(stepRow) + Math.abs(stepColumn);
+        
+              if (nearUser.steps === undefined || Steps < nearUser.steps) {
+                nearUser = {
+                  steprow: stepRow,
+                  stepcolumn: stepColumn,
+                  steps: Steps,
+                  positionRow: itemUserRow,
+                  positionColumn: itemUserColumn,
+                };
+              }
+            }
+            if (Math.abs(nearUser.steprow) === Math.abs(nearUser.stepcolumn)) {
+              if (Math.abs(nearUser.steprow) > itemEnemyDistance) {
+                tempPRow = (itemEnemyRow - (itemEnemyDistance * Math.sign(nearUser.steprow)));
+                tempPCOlumn = (itemEnemyColumn - (itemEnemyDistance * Math.sign(nearUser.stepcolumn)));
+        
+                randomEnemy.position = this.rowColumnToIndex(tempPRow, tempPCOlumn);
+              } else {
+                tempPRow = (itemEnemyRow - (nearUser.steprow - (1 * Math.sign(nearUser.steprow))));
+                tempPCOlumn = (itemEnemyColumn - (nearUser.stepcolumn - (1 * Math.sign(nearUser.steprow))));
+        
+                randomEnemy.position = this.rowColumnToIndex(tempPRow, tempPCOlumn);
+              }
+            } else if (nearUser.stepcolumn === 0) {
+              if (Math.abs(nearUser.steprow) > itemEnemyDistance) {
+                tempPRow = (itemEnemyRow - (itemEnemyDistance * Math.sign(nearUser.steprow)));
+        
+                randomEnemy.position = this.rowColumnToIndex(tempPRow, (itemEnemyColumn));
+              } else {
+                tempPRow = (itemEnemyRow - (nearUser.steprow - (1 * Math.sign(nearUser.steprow))));
+        
+                randomEnemy.position = this.rowColumnToIndex(tempPRow, (itemEnemyColumn));
+              }
+            } else if (nearUser.steprow === 0) {
+              if (Math.abs(nearUser.stepcolumn) > itemEnemyDistance) {
+                tempPCOlumn = (itemEnemyColumn - (itemEnemyDistance * Math.sign(nearUser.stepcolumn)));
+        
+                randomEnemy.position = this.rowColumnToIndex((itemEnemyRow), tempPCOlumn);
+              } else {
+                const tempFormul = (nearUser.stepcolumn - (1 * Math.sign(nearUser.stepcolumn)));
+                tempPCOlumn = (itemEnemyColumn - tempFormul);
+        
+                randomEnemy.position = this.rowColumnToIndex((itemEnemyRow), tempPCOlumn);
+              }
+            } else if (Math.abs(nearUser.steprow) > Math.abs(nearUser.stepcolumn)) {
+              if (Math.abs(nearUser.steprow) > itemEnemyDistance) {
+                tempPRow = (itemEnemyRow - (itemEnemyDistance * Math.sign(nearUser.steprow)));
+        
+                randomEnemy.position = this.rowColumnToIndex(tempPRow, (itemEnemyColumn));
+              } else {
+                tempPRow = (itemEnemyRow - (nearUser.steprow));
+        
+                randomEnemy.position = this.rowColumnToIndex(tempPRow, (itemEnemyColumn));
+              }
+            } else if (Math.abs(nearUser.stepcolumn) > itemEnemyDistance) {
+              tempPCOlumn = (itemEnemyColumn - (itemEnemyDistance * Math.sign(nearUser.stepcolumn)));
+        
+              randomEnemy.position = this.rowColumnToIndex((itemEnemyRow), tempPCOlumn);
+            } else {
+                randomEnemy.position = this.rowColumnToIndex((itemEnemyRow), (itemEnemyColumn));
+            }
+
+            this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
+            this.move = 'user';
+        }
     }
+
+    
+
+    async enemyTeamAttack(attacker, attackedUser) {
+        const targetUser = attackedUser.character;
+        let damage = Math.max(attacker.attack - targetUser.defence, attacker.attack * 0.1);
+        damage = Math.floor(damage);
+
+        await this.gamePlay.showDamage(attackedUser.position);
+        targetUser.health -= damage;
+        this.move = "user";
+        if (targetUser.health <= 0) {
+            userTeamPositions = userTeamPositions.filter(item => item.position !== attackedUser.position);
+        };
+
+        if (userTeamPositions.length === 0){
+            GamePlay.showMessage('Game Over!!!');
+        }
+        this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
+    }
+
+    enemyAttack(rightAttack){
+        for (const item of [...userTeamPositions]){
+            if (rightAttack.includes(item.position)){
+                return item;
+            }
+            return null;  
+        }
+        
+    }
+
+    
+
+
+
     onCellLeave(index) {
         // TODO: react to mouse leave
         this.gamePlay.hideCellTooltip(index)
@@ -161,4 +298,17 @@ export default class GameController {
     getIndex(arr) {
         return arr.findIndex((item) => item.position === this.index)
     }
+
+
+    positionRow(index) {
+        return Math.floor(index / this.gamePlay.boardSize);
+      }
+    
+      positionColumn(index) {
+        return index % this.gamePlay.boardSize;
+      }
+    
+      rowColumnToIndex(row, column) {
+        return (row * 8) + column;
+      }
 }
