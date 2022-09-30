@@ -19,7 +19,7 @@ export default class GameController {
         this.stateService = stateService;
         this.userTeam = [];
         this.enemyTeam = [];
-        this.level = 1;
+        this.level = 2;
         this.index = 0;
         this.move = 'user';
         this.selected = false;
@@ -280,6 +280,16 @@ export default class GameController {
         return (row * 8) + column;
       }
 
+      nextLevel(){
+        this.gamePlay.drawUi(themes[this.level]);
+        if (this.level === 2){
+            this.userTeam(generateTeam(Team.getUserTeam(), 1, 1));
+            this.enemyTeam(generateTeam(Team.getEnemyTeam(), 2, (this.userTeam.lenfth + userTeamPositions.length)));
+            this.addPositionCharacted(this.userTeam, this.enemyTeam)
+        }
+        this.redrawPositions([...userTeamPositions, ...enemyTeamPositions])
+      }
+
     async userAttack(attacker, attackedEnemy) {
         const targetEnemy = attackedEnemy.character;
         let damage = Math.max(attacker.attack - targetEnemy.defence, attacker.attack * 0.1);
@@ -290,14 +300,19 @@ export default class GameController {
         this.move = "enemy";
         if (targetEnemy.health <= 0) {
             enemyTeamPositions = enemyTeamPositions.filter((item) => item.position !== attackedEnemy.position);
-            if (enemyTeamPositions.length === 0){
+        }
+        if (enemyTeamPositions.length === 0){
                 for (const item of userTeamPositions){
                     this.point += item.character.health;
+                    item.character.level += 1;
+                    item.character.attack = Math.floor(Math.max(item.character.attack, item.character.attack * (1.8 - item.character.health/100)));
+                    item.character.defence = Math.floor(Math.max(item.character.defence, item.character.defence * (1.8 - item.character.health/100)));
+                    item.character.health = (item.character.health + 80) < 100 ? item.character.health + 80 : 100;
                 }
-               // this.levelUp();
+               
                 this.level += 1;
-                //this.nextLevel();
-            }
+                this.nextLevel();
+            
         }
         this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
     }
