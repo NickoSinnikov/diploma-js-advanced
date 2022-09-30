@@ -75,8 +75,7 @@ export default class GameController {
         if (this.gamePlay.boardEl.style.cursor === 'not-allowed') {
             GamePlay.showError("Неверное действие!");
         } else if (
-            /*this.move === 'user' &&*/
-            this.getIndex([...userTeamPositions]) !== -1) {
+            this.move === 'user' && this.getIndex([...userTeamPositions]) !== -1) {
             this.gamePlay.deselectCell(currentSelected);
             this.gamePlay.selectCell(index);
             currentSelected = index;
@@ -97,6 +96,9 @@ export default class GameController {
             this.gamePlay.setCursor(cursors.auto);
             this.selected = false;
             await this.userAttack(this.activeCharacter.character, attackedEnemy)
+            if (enemyTeamPositions.length > 0 ){
+                this.enemyMove()
+            }
         }
 
     }
