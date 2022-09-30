@@ -19,7 +19,7 @@ export default class GameController {
         this.stateService = stateService;
         this.userTeam = [];
         this.enemyTeam = [];
-        this.level = null;
+        this.level = 1;
         this.index = 0;
         this.move = 'user';
         this.selected = false;
@@ -37,7 +37,7 @@ export default class GameController {
     init() {
         // TODO: add event listeners to gamePlay events
         this.events();
-        this.gamePlay.drawUi(themes[1]); //themes[gameState.level];
+        this.gamePlay.drawUi(themes[this.level]);
         this.userTeam = Team.getStartUserTeam();
         this.level = 1;
         this.enemyTeam = generateTeam(Team.getEnemyTeam(), 1, 2);
@@ -89,15 +89,16 @@ export default class GameController {
             this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
             this.move = "enemy";
             this.selected = false;
+            this.enemyMove();
         } else if (this.selected && this.gamePlay.boardEl.style.cursor === 'crosshair') {
             const attackedEnemy = [...enemyTeamPositions].find(item => item.position === index);
             this.gamePlay.deselectCell(index);
             this.gamePlay.deselectCell(currentSelected);
             this.gamePlay.setCursor(cursors.auto);
             this.selected = false;
-            await this.userAttack(this.activeCharacter.character, attackedEnemy)
+            await this.userAttack(this.activeCharacter.character, attackedEnemy);   
             if (enemyTeamPositions.length > 0 ){
-                this.enemyMove()
+                this.enemyMove();
             }
         }
 
@@ -135,30 +136,11 @@ export default class GameController {
 
     }
 
-    async userAttack(attacker, attackedEnemy) {
-        const targetEnemy = attackedEnemy.character;
-        let damage = Math.max(attacker.attack - targetEnemy.defence, attacker.attack * 0.1);
-        damage = Math.floor(damage);
-
-        await this.gamePlay.showDamage(attackedEnemy.position);
-        targetEnemy.health -= damage;
-        this.move = "enemy";
-        if (targetEnemy.health <= 0) {
-            enemyTeamPositions = enemyTeamPositions.filter((item) => item.position !== attackedEnemy.position);
-            if (enemyTeamPositions.length === 0){
-                for (const item of userTeamPositions){
-                    this.point += item.character.health;
-                }
-               // this.levelUp();
-                this.level += 1;
-                //this.nextLevel();
-            }
-        };
-        this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
-    }
+   
 
 
     enemyMove() {
+        console.log(this.move)
         if (this.move = "enemy"){
             for (let enemyPers of [...enemyTeamPositions]){
                 const rightAttack = getRightPositions(enemyPers.position, this.activeCharacter.character.distanceAttack);
@@ -257,32 +239,16 @@ export default class GameController {
 
     
 
-    async enemyTeamAttack(attacker, attackedUser) {
-        const targetUser = attackedUser.character;
-        let damage = Math.max(attacker.attack - targetUser.defence, attacker.attack * 0.1);
-        damage = Math.floor(damage);
-
-        await this.gamePlay.showDamage(attackedUser.position);
-        targetUser.health -= damage;
-        this.move = "user";
-        if (targetUser.health <= 0) {
-            userTeamPositions = userTeamPositions.filter(item => item.position !== attackedUser.position);
-        };
-
-        if (userTeamPositions.length === 0){
-            GamePlay.showMessage('Game Over!!!');
-        }
-        this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
-    }
+    
 
     enemyAttack(rightAttack){
         for (const item of [...userTeamPositions]){
             if (rightAttack.includes(item.position)){
                 return item;
             }
-            return null;  
+            
         }
-        
+        return null; 
     }
 
     
@@ -313,4 +279,44 @@ export default class GameController {
       rowColumnToIndex(row, column) {
         return (row * 8) + column;
       }
+
+    async userAttack(attacker, attackedEnemy) {
+        const targetEnemy = attackedEnemy.character;
+        let damage = Math.max(attacker.attack - targetEnemy.defence, attacker.attack * 0.1);
+        damage = Math.floor(damage);
+
+        await this.gamePlay.showDamage(attackedEnemy.position);
+        targetEnemy.health -= damage;
+        this.move = "enemy";
+        if (targetEnemy.health <= 0) {
+            enemyTeamPositions = enemyTeamPositions.filter((item) => item.position !== attackedEnemy.position);
+            if (enemyTeamPositions.length === 0){
+                for (const item of userTeamPositions){
+                    this.point += item.character.health;
+                }
+               // this.levelUp();
+                this.level += 1;
+                //this.nextLevel();
+            }
+        }
+        this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
+    }
+
+    async enemyTeamAttack(attacker, attackedUser) {
+        const targetUser = attackedUser.character;
+        let damage = Math.max(attacker.attack - targetUser.defence, attacker.attack * 0.1);
+        damage = Math.floor(damage);
+
+        await this.gamePlay.showDamage(attackedUser.position);
+        targetUser.health -= damage;
+        this.move = "user";
+        if (targetUser.health <= 0) {
+            userTeamPositions = userTeamPositions.filter(item => item.position !== attackedUser.position);
+        };
+
+        if (userTeamPositions.length === 0){
+            GamePlay.showMessage('Game Over!!!');
+        }
+        this.gamePlay.redrawPositions([...userTeamPositions, ...enemyTeamPositions]);
+    }
 }
