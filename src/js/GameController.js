@@ -131,8 +131,6 @@ export default class GameController {
         }
 
         if (this.selected) {
-
-
             const rightPositions = getRightPositions(this.activeCharacter.position, this.activeCharacter.character.distance);
             const rightAttack = getRightPositions(this.activeCharacter.position, this.activeCharacter.character.distanceAttack);
 
@@ -209,7 +207,6 @@ export default class GameController {
 
 
     enemyMove() {
-        console.log(this.move);
         if (this.move = "enemy"){
             for (let enemyPers of [...enemyTeamPositions]){
                 const rightAttack = getRightPositions(enemyPers.position, this.activeCharacter.character.distanceAttack);
@@ -311,11 +308,10 @@ export default class GameController {
     
 
     enemyAttack(rightAttack){
-        for (const item of [...userTeamPositions]){
+        for (const item of [...enemyTeamPositions]){
             if (rightAttack.includes(item.position)){
                 return item;
             }
-            
         }
         return null; 
     }
